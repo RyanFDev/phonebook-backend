@@ -140,7 +140,7 @@ app.put('/api/persons/:id', (request, response) => {
 });
 
 const PORT = process.env.PORT || 3001;
-console.log('env.port: ', process.env.port);
+console.log('env.port: ', process.env.PORT);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
