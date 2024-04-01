@@ -1,0 +1,29 @@
+@baseurl = http://localhost:3001/api
+
+### Get all persons
+GET {{baseurl}}/persons
+
+### Create a new person
+POST {{baseurl}}/persons
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "number": "1234567890"
+}
+
+
+### Get a specific person by ID
+GET {{baseurl}}/persons/😃🤧🤮🤢😜🤓
+
+### Update a person by ID
+PUT {{baseurl}}/persons/😃🤧🤮🤢😜🤓
+Content-Type: application/json
+
+{
+  "name": "Updated Name",
+  "number": "9876543210"
+}
+
+### Delete a person by ID
+DELETE {{baseurl}}/persons/😃🤧🤮🤢😜🤓
