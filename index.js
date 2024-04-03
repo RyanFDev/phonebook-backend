@@ -1,14 +1,13 @@
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
-const generateEmojid = require('./emojid');
-
 const cors = require('cors');
 
 const app = express();
 
 app.use(cors());
-app.use(express.json());
 app.use(express.static('dist'));
+app.use(express.json());
 
 // Configure morgan to output the body of POST requests
 morgan.token('body', (req, res) => JSON.stringify(req.body));
@@ -28,37 +27,17 @@ app.use(
   })
 );
 
-let persons = [
-  {
-    id: '😀',
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: '😎',
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: '🤩',
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: '😊',
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-];
+const Listing = require('./models/listing');
 
 // Return info about the phonebook
 app.get('/info', (request, response) => {
+  const listings = Listing.find({});
   const date = new Date();
   response.send(
     `
       <h1>Phonebook Stats</h1>
       <p>
-        <b>Entries: </b>${persons.length} people
+        <b>Entries: </b>${listings.length} people
       </p>
       <p>${date}</p>
     `
@@ -67,33 +46,46 @@ app.get('/info', (request, response) => {
 
 // Return all persons
 app.get('/api/persons', (request, response) => {
-  response.json(persons);
+  Listing.find({}).then((listings) => {
+    response.json(listings);
+  });
 });
 
 // Return a single person
-app.get('/api/persons/:id', (request, response) => {
-  const id = String(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).end();
-  }
+app.get('/api/persons/:id', (request, response, next) => {
+  const id = request.params.id;
+  Listing.findById(id)
+    .then((listing) => {
+      if (listing) {
+        response.json(listing);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
 // Delete a person
-app.delete('/api/persons/:id', (request, response) => {
-  const id = String(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
+app.delete('/api/persons/:id', (request, response, next) => {
+  const body = request.body;
+  const id = request.params.id;
+  if (!id) {
+    return response.status(400).json({
+      error: 'Listing ID is missing',
+    });
+  }
 
-  response.status(204).end();
+  Listing.findByIdAndDelete(id)
+    .then(() => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 // Add a new person
 app.post('/api/persons', (request, response) => {
   const body = request.body;
-
+  // Validate the request
   if (!body.name) {
     return response.status(400).json({
       error: 'Name is missing',
@@ -106,40 +98,65 @@ app.post('/api/persons', (request, response) => {
     });
   }
 
-  if (persons.find((person) => person.name === body.name)) {
-    return response.status(400).json({
-      error: 'Name must be unique',
+  // Check if the name is already in the phonebook
+  Listing.findOne({ name: body.name })
+    .then((listing) => {
+      if (listing) {
+        return response.status(400).json({
+          error: 'Name must be unique',
+        });
+      } else {
+        // Create a new listing
+        const newListing = new Listing({
+          name: body.name,
+          number: body.number,
+        });
+        // Save the new listing
+        newListing.save().then((listing) => {
+          return response.json(listing);
+        });
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      return response.status(500).json({
+        error: 'Internal server error',
+      });
     });
-  }
-
-  const person = {
-    id: generateEmojid(),
-    name: body.name,
-    number: body.number,
-  };
-
-  persons = [...persons, person];
-
-  response.json(person);
 });
 
 // Update a person
 app.put('/api/persons/:id', (request, response) => {
-  const id = String(request.params.id);
+  const id = request.params.id;
   const body = request.body;
 
-  const person = {
-    id,
+  const updatedListing = {
     name: body.name,
     number: body.number,
   };
 
-  persons = persons.map((p) => (p.id === id ? { ...p, ...person } : p));
-
-  response.json(person);
+  Listing.findByIdAndUpdate(id, updatedListing, { new: true })
+    .then((listing) => {
+      return response.json(listing);
+    })
+    .catch((error) => {
+      console.error(error);
+      return response.status(500).end();
+    });
 });
 
-const PORT = process.env.PORT || 3001;
+// 404 middleware
+const unknownEndpoint = (request, response) => {
+  return response.status(404).send({ error: 'unknown endpoint' });
+};
+
+app.use(unknownEndpoint);
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+const errorHandler = require('./util/errorHandler');
+app.use(errorHandler);
+
+const PORT = process.env.PORT;
 console.log('env.port: ', process.env.PORT);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

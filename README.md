@@ -1,6 +1,6 @@
 # Phonebook Backend
 
-This is the backend for a phonebook web application built with Node.js.
+Backend for a phonebook web application built for FullStackOpen.com
 
 ## Getting Started
 
@@ -36,7 +36,7 @@ Deletes a specific phonebook entry based on the provided ID.
 
 ## Deployment
 
-The backend is deployed at [phonebook-backend-rf.fly.dev](https://phonebook-backend-rf.fly.dev).
+The backend is deployed at [phonebook-backend-sdih.onrender.com](https://phonebook-backend-sdih.onrender.com/).
 
 ## Technologies Used
 

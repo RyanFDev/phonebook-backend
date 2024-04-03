@@ -3,7 +3,8 @@
 ### Get all persons
 GET {{baseurl}}/persons
 
-### Create a new person
+### Create a new listing
+# @name person
 POST {{baseurl}}/persons
 Content-Type: application/json
 
@@ -12,18 +13,24 @@ Content-Type: application/json
   "number": "1234567890"
 }
 
+###
+@id = {{person.response.body.$.id}}
+###
 
 ### Get a specific person by ID
-GET {{baseurl}}/persons/😃🤧🤮🤢😜🤓
+GET {{baseurl}}/persons/{{id}}
 
 ### Update a person by ID
-PUT {{baseurl}}/persons/😃🤧🤮🤢😜🤓
+PUT {{baseurl}}/persons/{{id}}
 Content-Type: application/json
 
 {
-  "name": "Updated Name",
+  "name": "Farmer John",
   "number": "9876543210"
 }
 
 ### Delete a person by ID
-DELETE {{baseurl}}/persons/😃🤧🤮🤢😜🤓
+DELETE {{baseurl}}/persons/{{id}}
+
+### Intentionally fail to get a person by ID
+GET {{baseurl}}/persons/1234567890
