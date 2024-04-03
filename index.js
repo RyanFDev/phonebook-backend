@@ -31,17 +31,18 @@ const Listing = require('./models/listing');
 
 // Return info about the phonebook
 app.get('/info', (request, response) => {
-  const listings = Listing.find({});
-  const date = new Date();
-  response.send(
-    `
-      <h1>Phonebook Stats</h1>
-      <p>
-        <b>Entries: </b>${listings.length} people
-      </p>
-      <p>${date}</p>
-    `
-  );
+  Listing.find({}).then((listings) => {
+    const date = new Date();
+    response.send(
+      `
+          <h1>Phonebook Stats</h1>
+          <p>
+            <b>Entries: </b>${listings.length} people
+          </p>
+          <p>${date}</p>
+        `
+    );
+  });
 });
 
 // Return all persons
