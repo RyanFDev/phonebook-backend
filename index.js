@@ -84,20 +84,20 @@ app.delete('/api/persons/:id', (request, response, next) => {
 });
 
 // Add a new person
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body;
   // Validate the request
-  if (!body.name) {
-    return response.status(400).json({
-      error: 'Name is missing',
-    });
-  }
+  // if (!body.name) {
+  //   return response.status(400).json({
+  //     error: 'Name is missing',
+  //   });
+  // }
 
-  if (!body.number) {
-    return response.status(400).json({
-      error: 'Number is missing',
-    });
-  }
+  // if (!body.number) {
+  //   return response.status(400).json({
+  //     error: 'Number is missing',
+  //   });
+  // }
 
   // Check if the name is already in the phonebook
   Listing.findOne({ name: body.name })
@@ -118,16 +118,11 @@ app.post('/api/persons', (request, response) => {
         });
       }
     })
-    .catch((error) => {
-      console.error(error);
-      return response.status(500).json({
-        error: 'Internal server error',
-      });
-    });
+    .catch((error) => next(error));
 });
 
 // Update a person
-app.put('/api/persons/:id', (request, response) => {
+app.put('/api/persons/:id', (request, response, next) => {
   const id = request.params.id;
   const body = request.body;
 
@@ -136,14 +131,15 @@ app.put('/api/persons/:id', (request, response) => {
     number: body.number,
   };
 
-  Listing.findByIdAndUpdate(id, updatedListing, { new: true })
+  Listing.findByIdAndUpdate(id, updatedListing, {
+    new: true,
+    runValidators: true,
+    context: 'query',
+  })
     .then((listing) => {
       return response.json(listing);
     })
-    .catch((error) => {
-      console.error(error);
-      return response.status(500).end();
-    });
+    .catch((error) => next(error));
 });
 
 // 404 middleware
